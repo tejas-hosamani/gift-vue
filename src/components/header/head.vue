@@ -1,5 +1,5 @@
 <template>
-    <div class="head-el row">
+    <div class="head-el">
           <nav class="indigo darken-4">
             <div class="nav-wrapper">
             <a href="#!" class="brand-logo right hide-on-med-and-down">Logo</a>

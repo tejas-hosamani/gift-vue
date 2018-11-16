@@ -24,7 +24,7 @@
 
 <style scoped>
     .footer-info {
-        position: absolute;
+        position: relative;
         bottom: 0;
         color: #777;
         font-size: 12px;

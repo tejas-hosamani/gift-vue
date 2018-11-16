@@ -1,5 +1,5 @@
 <template>
-    <div class="col s3">
+    <div class="col m3 s12">
         <ul class="cart-list collection">
             <li class="collection-item" v-for="item in items" :key = "item.cartId">
                 <span class="cartNo">{{ item.cartId }}</span>
