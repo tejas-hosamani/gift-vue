@@ -1,10 +1,17 @@
 <template>
     <span class="body container">
+        <div class="row" v-show="fm.status">
+            <div class="col-md-6" >
+                <ul class="collection">
+                    <li style="padding: 10px 60px;" class="collection-item white-text" v-bind:class="{ red: fm.error, green: fm.success }">{{ fm.msg }}</li>
+                </ul>
+            </div>
+        </div>
         <div class="row">
             <div v-show="showCartForm" class="col-md-12">
                 <div class="container">
                     <form action="" class="row">
-                        <select class="custom-select col-md-6">
+                        <select v-model="tempCart.cartId" class="custom-select col-md-7">
                             <option disabled selected>Pick new customer ID</option>
                             <template v-for="item in avail">
                                 <option v-if="!item.availId" v-bind:class="{ disabled: item.availId }" :key="item.value">{{ item.value }}</option>
@@ -12,13 +19,14 @@
                         </select>
                         <div class="col-md-6">
                             <div class="container">
-                                <div class="row">
-                                    <select class="custom-select col">
+                                <div class="row" v-for="(cartEl, index) in tempCart.items" :key="index">
+                                    <div class="">{{ index + 1 }}. </div>
+                                    <select v-model="cartEl.name" class="custom-select col-md-6">
                                         <option disabled selected>Select an item</option>
                                         <option v-for="item in shop" :key="item.name">{{ item.name }}</option>
                                         
                                     </select>
-                                    <select class="custom-select col">
+                                    <select v-model="cartEl.quantity" class="custom-select col">
                                         <option disabled selected>Quantity</option>
                                         <option>1</option>
                                         <option>2</option>
@@ -27,10 +35,22 @@
                                         <option>5</option>
                                         
                                     </select>
+                                    <div class="col">
+
+                                        <a class="btn-floating btn-small waves-effect waves-light red"
+                                            @click="removeItemFromCart(index)">
+                                            <i class="material-icons">close</i>
+                                        </a>
+                                    </div>
                                 </div>
+
+                                <a class=""
+                                    @click="addNewItemToCart">
+                                   <img class="tapToAddAnItem-bg" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAU8AAAAnCAIAAAAAf10mAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAAR6SURBVHhe7Z29atxAEMfzUKlSpXV3nV/DlRsXCSSQ1G5c+C1CzIEfImAuLmIT2/gC/sDEGEJSJc7M7OznrUDalbGk+/9YhFZarVaj+a10dqEXjwCA9QC2A7AuqO2/fv+5+HF1er788vUEBWUI5eRsSTlJmYkULS5JDNl2qnz7fnn38+Hv339mKwDPDmUj5SRlJuUnUrSMMIZUZdvJftokewEYFnf3DxfLK6RoDSaGtMK20+MeUyYYJpSZJ+eXSNEaTAxphW2n93vZCMAQMT9BtQKKMAGE7WDowPZ6YDsYB7C9HtgOxgFsrwe2g3EA2+uB7WAcwPZ6YDsYB7C9nm62H+1tbsxyZfvwWpsUsTg+0rXeuJ7v5Ed1c7g12zm40VofHO/ONncXZv32aHFr1kC/FNjOObB3rBXQ1XZPj84s9jdm+2O23XF7sL25NYftT0JX2zkB6DkE2wNge4/A9g58+jx/+/6jVlrQxXa+ERuznS1aTtr2ghjSst52E19X1F5+89879LtWQ8+q6159Geaem9sL8Q8KPwydzrnsH4S2B33uzhtsD0ZCRaU1l7kIDtc39hDzJh9EwJ036NPNAklMeLsf3hNNQ4OD0vTlq9dU2idrB9sp7HILJNSTtb0shrSstT0OK2e/qRotbaLz9syjL3y2ix7WKN9PSPzQFsdMlY+1QzKaabPwvNLnqlTx5cisIVXjoT2dbF99DeE+ZczRsz1u7MdgYqLXGI1TdvlLmywuTTslawfbLRO2vTiGtOz5Td5FOU3fUGxHsDG9Pdn2MVb+yDTCnTqeHUyfjSNX3NWJ7f55nr/qrO287g8k7LXEMXHHMulQp0iSpqa0SVbY7qiJIS37sV2eZuaNNLA9DHfWFq90aqzI0GAmH2XPxYZE2hDOnFZjULgT2620SRp3sD3syhVrux9PNOx1sL0Y2F5PP7ZzWG02a7UX23Pt7Zyi260hdbbzRr4EPbtrkzTOHpu1XToMx+OIxwPb2wLb6+nF9sQ0Tnpve5i+XuyAYGN6ezLt0xnBnqJp+4pC3GdqbGObYttlYzgeR3yNa2d79i30zbsPursZ2O6oiSEte7DdZTaHmJ6Tzvb4L2QZAcKuWDOX/dx+5W75qYRgPaiNMSTUWPqx5oTnlT5XjJV+7LTC47FtutkepZf06RvzLhlPnIL+WGIdbCeSZG2TpgRsDymOIS2rf7erIeq5k0fCHf+3KYMI7PbGXUmDBGOsFHJjVXIu8X/ggkOa/gPHQ9U2tJfb83g62m4HoBOHTkam2MHAdsIla8s0JWB7QlkMadnd9nZMO9ygBkrW9mlKFNg+eQpiSEvYDoYObK8HtoNxANvreVrbAegL2F4PbAfjALbXA9vBOIDt9cB2MA5gez2wHYwD2F4PbAfjALbX423HR7bAYOFvmJ0tkaI1mBjSCtuOD2iCwYJvvNYTfeNVP459j49jgwFB2Ug5GX2/HSnakTCGVGXbCaqQ/fS4N7+RUFCevZyeLyknTZoiRctKEkO1HQAweWA7AOvB4+N/+x2KxCMAOHYAAAAASUVORK5CYII=" alt=""></a>
                             </div>
                         </div>
                     </form>
+                    <a class="btn btn-success" @click="addToCart">Add cart</a>
                 </div>
             </div>
         </div>
@@ -56,7 +76,6 @@
     </span>
 </template>
 
-
 <script>
 import singleCart from "./single-cart.vue";
     export default {
@@ -65,7 +84,20 @@ import singleCart from "./single-cart.vue";
         },
         data() {
             return {
-
+                tempCart: {
+                    cartId: 'Pick new customer ID',
+                        items: [
+                            {
+                                name: 'Select an item',
+                                price: 0,
+                                quantity: 1,
+                                gst: 0
+                            }
+                        ],
+                        addedBy: 'Munna',
+                        created_at: 'timeGoesHere',
+                        total: 2
+                },
                 avail: [ 'disabled', 'disabled' ],
 
                 shop: [
@@ -195,7 +227,14 @@ import singleCart from "./single-cart.vue";
 
                     },
                 showCartForm: true,
-                someData: "has this text".padStart
+                someData: "has this text".padStart,
+                fm: {
+                    status: false,
+                    error: false,
+                    success: false,
+                    msg: ''
+                }
+                
             }
         },
         methods: {
@@ -233,27 +272,64 @@ import singleCart from "./single-cart.vue";
                 }
                 // console.log(tempAvail);
                 // console.log(this.avail);
+            },
+
+            addNewItemToCart: function (){
+                this.tempCart.items.push({
+                    name: '',
+                    quantity: ''
+                });
+            },
+            removeItemFromCart: function(index) {
+                this.tempCart.items.splice(index, 1);
+            },
+            addToCart: function() {
+
+                // Validate
+                this.validationMeth();
+                // Add cart
+                // this.cart.push({
+                //     cartId: this.tempCart.cartId,
+                //     items: this.tempCart.items
+                // });
+                // this.seeIfavail(this.cart);
+                // this.showCartForm = false;
+            },
+            validationMeth: function () {
+                console.log(this.tempCart);
+                let cartId = this.tempCart.cartId;
+                if(isNaN(cartId)) {
+                    this.setPageStatus(true, 'error', 'Please pick a customer ID');
+                }
+            },
+
+            setPageStatus: async function(status, type, msg) {
+                this.fm.status = status;
+                if(type == 'error') {
+                    this.fm.error = true;
+                    this.fm.msg = msg;
+                } else if(type == 'success') {
+                    this.fm.success = true;
+                    this.fm.msg = msg;
+                } else if(type == 'unset') {
+                    this.fm.error = false;
+                    this.fm.msg = '';
+                    this.fm.success = false;
+                    this.fm.status = false;
+                }
+                await this.sleep(5000);
+                this.fm.error = false;
+                this.fm.msg = '';
+                this.fm.success = false;
+                this.fm.status = false;
+
+            },
+
+            sleep: function (ms) {
+                return new Promise(resolve => setTimeout(resolve, ms));
             }
 
             
-        },
-        computed: {
-            // seeIfavail: function (cart) {
-            //     let tempAvail = cart.map((val) => {
-            //         return val.cartId;
-            //     });
-
-            //     for(var i=0;i<16;i++) {
-            //         this.avail[i] = { availId: false, value: i };
-            //     }
-
-            //     for(var j=0; j<tempAvail.length;j++) {
-            //         this.avail[tempAvail[j]] = { availId: true};
-            //         this.avail[tempAvail[j]].value = tempAvail[j];
-            //     }
-            //     // console.log(tempAvail);
-            //     // console.log(this.avail);
-            // }
         },
         beforeMount() {
             this.seeIfavail(this.cart);
@@ -309,6 +385,10 @@ import singleCart from "./single-cart.vue";
     background-image: none;
     background-color: #eef1f6;
     border-color: #d1dbe5;   
+}
+.tapToAddAnItem-bg {
+    opacity: 0.5;
+    margin-left: -7px;
 }
 
 </style>
