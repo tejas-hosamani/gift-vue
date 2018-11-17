@@ -104,25 +104,21 @@ import singleCart from "./single-cart.vue";
                     {
                         name: 'Blue bag',
                         price: 21,
-                        quantity: 2,
                         gst: 18
                     },
                     {
                         name: 'Red bag',
                         price: 32,
-                        quantity: 2,
                         gst: 18
                     },
                     {
                         name: 'Orange bag',
                         price: 23,
-                        quantity: 2,
                         gst: 28
                     },
                     {
                         name: 'Pink bag',
                         price: 26,
-                        quantity: 2,
                         gst: 18
                     },
                 ],
@@ -215,9 +211,9 @@ import singleCart from "./single-cart.vue";
                         cartId: 0,
                         items: [
                             {
-                                name: '-',
+                                name: 'Select an item',
                                 price: 0,
-                                quantity: 0,
+                                quantity: 1,
                                 gst: 0
                             }
                         ],
@@ -244,12 +240,19 @@ import singleCart from "./single-cart.vue";
             },
             getCartTotal: function (cartArray) {
                 var cartTotal = 0;
-                cartArray.forEach(elem => {
-                    elem.items.forEach(item => {
-                        // cartTotal += item.price*item.quantity + item.price*item.quantity*item.gst / 100;
+
+                if(Array.isArray(cartArray)) {
+                    cartArray.forEach(elem => {
+                        elem.items.forEach(item => {
+                            cartTotal += this.getTotalWithPercentage(item);
+                        });
+                    });
+                } else {
+                    cartArray.items.forEach(item => {
                         cartTotal += this.getTotalWithPercentage(item);
                     });
-                });
+                }
+
                 return cartTotal;
             },
 
@@ -270,14 +273,12 @@ import singleCart from "./single-cart.vue";
                     this.avail[tempAvail[j]] = { availId: true};
                     this.avail[tempAvail[j]].value = tempAvail[j];
                 }
-                // console.log(tempAvail);
-                // console.log(this.avail);
             },
 
             addNewItemToCart: function (){
                 this.tempCart.items.push({
-                    name: '',
-                    quantity: ''
+                    name: 'Select an item',
+                    quantity: '0'
                 });
             },
             removeItemFromCart: function(index) {
@@ -286,21 +287,41 @@ import singleCart from "./single-cart.vue";
             addToCart: function() {
 
                 // Validate
-                this.validationMeth();
-                // Add cart
-                // this.cart.push({
-                //     cartId: this.tempCart.cartId,
-                //     items: this.tempCart.items
-                // });
-                // this.seeIfavail(this.cart);
-                // this.showCartForm = false;
+                if(this.validationMeth()) {
+                    // Add Price and Tax
+                    this.addPriceAndTax();
+
+                    // Get Total
+                    this.tempCart.total = this.getCartTotal(this.tempCart);
+
+                    // Add cart
+                    this.cart.push({
+                        cartId: this.tempCart.cartId,
+                        items: this.tempCart.items,
+                        total: this.tempCart.total
+                    });
+                    this.seeIfavail(this.cart);
+                    this.showCartForm = false;
+                }
             },
             validationMeth: function () {
-                console.log(this.tempCart);
+                let validationStatus = true;
+
+                // Check whether customer ID exists or not
                 let cartId = this.tempCart.cartId;
                 if(isNaN(cartId)) {
                     this.setPageStatus(true, 'error', 'Please pick a customer ID');
+                    validationStatus = false;
                 }
+
+                // Check whether all items are full: name and quantity
+                let emptyItemCheck = this.tempCart.items.findIndex(k => k.name == '' || k.name == 'Select an item' || k.quantity == '' || k.quantity == 'Quantity');
+                if(emptyItemCheck >= 0) {
+                    this.setPageStatus(true, 'error', 'Item '+ (emptyItemCheck+1) +' is missing data');
+                    validationStatus = false;
+                }
+
+                return validationStatus;
             },
 
             setPageStatus: async function(status, type, msg) {
@@ -325,11 +346,18 @@ import singleCart from "./single-cart.vue";
 
             },
 
+            addPriceAndTax: function() {
+                let tempvarHere = '';
+                this.tempCart.items.forEach(element => {
+                     tempvarHere = this.shop.filter(d => d.name === element.name);
+                     element.price = tempvarHere[0].price;
+                    element.gst = tempvarHere[0].gst;
+                });
+            },
+
             sleep: function (ms) {
                 return new Promise(resolve => setTimeout(resolve, ms));
             }
-
-            
         },
         beforeMount() {
             this.seeIfavail(this.cart);
