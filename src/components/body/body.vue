@@ -8,16 +8,17 @@
             </div>
         </div>
         <div class="row">
-            <div v-show="showCartForm" class="col-md-12">
+            <div v-if="showCartForm" class="col-md-12">
                 <div class="container">
                     <form action="" class="row">
-                        <select v-model="tempCart.cartId" class="custom-select col-md-7">
+                        <select v-model="tempCart.cartId" class="custom-select col-md-6">
                             <option disabled selected>Pick new customer ID</option>
                             <template v-for="item in avail">
                                 <option v-if="!item.availId" v-bind:class="{ disabled: item.availId }" :key="item.value">{{ item.value }}</option>
                             </template>
                         </select>
-                        <div class="col-md-6">
+                        <div class="col-md-1"></div>
+                        <div class="col-md-6 modi-class">
                             <div class="container">
                                 <div class="row" v-for="(cartEl, index) in tempCart.items" :key="index">
                                     <div class="">{{ index + 1 }}. </div>
@@ -35,8 +36,7 @@
                                         <option>5</option>
                                         
                                     </select>
-                                    <div class="col">
-
+                                    <div class="col modi-class-for-cancel">
                                         <a class="btn-floating btn-small waves-effect waves-light red"
                                             @click="removeItemFromCart(index)">
                                             <i class="material-icons">close</i>
@@ -315,7 +315,7 @@ import singleCart from "./single-cart.vue";
                 }
 
                 // Check whether all items are full: name and quantity
-                let emptyItemCheck = this.tempCart.items.findIndex(k => k.name == '' || k.name == 'Select an item' || k.quantity == '' || k.quantity == 'Quantity');
+                let emptyItemCheck = this.tempCart.items.findIndex(k => k.name == '' || k.name == 'Select an item' || k.quantity == '' || k.quantity == 'Quantity' || k.quantity == 0);
                 if(emptyItemCheck >= 0) {
                     this.setPageStatus(true, 'error', 'Item '+ (emptyItemCheck+1) +' is missing data');
                     validationStatus = false;
@@ -406,6 +406,10 @@ import singleCart from "./single-cart.vue";
 .custom-select option{
     color: #06f;
 }
+
+.custom-select {
+    width: 56%;
+}
  .custom-select .disabled {
     pointer-events:none;
     color: #f00;
@@ -417,6 +421,14 @@ import singleCart from "./single-cart.vue";
 .tapToAddAnItem-bg {
     opacity: 0.5;
     margin-left: -7px;
+}
+.modi-class {
+    padding: 5%;
+    background: #eee;
+}
+
+.modi-class-for-cancel {
+    text-align: right;
 }
 
 </style>

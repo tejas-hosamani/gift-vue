@@ -12,10 +12,13 @@
             </thead>
             <tbody>
                 <template v-for="items in singleCartData">
-                    
-                    <tr v-for="item in items.items" :key = "item.name">
+
+                    <tr v-for="(item, index) in items.items" :key = "index">
                         <td>{{ item.name }}</td>
-                        <td>{{ item.price }}</td>
+                        <td>
+                            {{ item.price }}
+                            <!-- <input type="number" ref="priceValue" v-on:blur="runthisfun(index)" /> -->
+                        </td>
                         <td>{{ item.quantity }}</td>
                         <td>{{ getTotalWithTax(item) }}</td>
                     </tr>
@@ -57,6 +60,14 @@
 
             getTotalWithTax: function (num) {
                 return num.price*num.quantity + num.price*num.quantity*num.gst / 100;
+            },
+
+            runthisfun: function (id) {
+                console.log(this.singleCartData[0].items[id].price);
+                console.log(this.$refs.priceValue[id].value);
+
+                // console.log(this.cart);
+                // this.singleCartData[0].items[id].price = this.$refs.priceValue[id].value;
             }
         }
     }
